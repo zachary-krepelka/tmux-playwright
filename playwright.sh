@@ -4,7 +4,7 @@
 # AUTHOR: Zachary Krepelka
 # DATE: Monday, November 17th, 2025
 # ABOUT: Stage Asciinema Casts Programmatically
-# ORIGIN: https://github.com/zachary-krepelka/tmux-bad-apple.git
+# ORIGIN: https://github.com/zachary-krepelka/tmux-playwright.git
 # UPDATED: Monday, December 1st, 2025 at 10:38 PM
 
 # Functions --------------------------------------------------------------- {{{1
