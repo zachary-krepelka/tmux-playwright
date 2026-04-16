@@ -5,7 +5,7 @@
 # DATE: Monday, November 17th, 2025
 # ABOUT: Stage Asciinema Casts Programmatically
 # ORIGIN: https://github.com/zachary-krepelka/tmux-playwright.git
-# UPDATED: Wednesday, April 15th, 2026 at 10:36 PM
+# UPDATED: Thursday, April 16th, 2026 at 12:45 AM
 
 # Functions --------------------------------------------------------------- {{{1
 
@@ -49,7 +49,7 @@ error() {
 check_dependencies() {
 
 	local missing= dependencies=(
-		asciinema cat column cut less pod2text realpath sleep tmux
+		asciinema cat column cut less pod2text realpath sed sleep tmux
 	)
 
 	for cmd in "${dependencies[@]}"
@@ -71,7 +71,7 @@ curtain_up() {
 }
 
 curtain_down() {
-	tmux -L recording send-keys C-D
+	tmux -L recording kill-server
 }
 
 typewrite() {
@@ -173,6 +173,8 @@ tmux -f /dev/null -L recording new-session -d -c "$where" -x $cols -y $rows '
 	bash --noprofile --norc --noediting'
 
 source "$input"
+
+sed -i '/\[server exited\]/d' "$output"
 
 # Documentation ----------------------------------------------------------- {{{1
 
