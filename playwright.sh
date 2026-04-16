@@ -5,7 +5,7 @@
 # DATE: Monday, November 17th, 2025
 # ABOUT: Stage Asciinema Casts Programmatically
 # ORIGIN: https://github.com/zachary-krepelka/tmux-playwright.git
-# UPDATED: Wednesday, April 15th, 2026 at 10:03 PM
+# UPDATED: Wednesday, April 15th, 2026 at 10:36 PM
 
 # Functions --------------------------------------------------------------- {{{1
 
@@ -32,7 +32,7 @@ usage() {
 	  -H  read documentation for this script then exit
 
 	Examples
-	  bash $program demo.script demo.cast
+	  bash $program demo.play demo.cast
 	USAGE
 }
 
@@ -197,11 +197,14 @@ playwright.sh - Stage Asciinema Casts Programmatically
 
 This documentation is still under construction.
 
-Tmux Playwright is a bash script that records an Asciinema cast
+Tmux Playwright is a bash script that records an asciinema cast
 non-interactively in a headless tmux server using an input script to
 programmatically specify behavior.  A design goal is to make the process of
-recording Asciinema casts reproducible and version-controllable by eliminating
-human intervention.
+recording asciinema casts reproducible and version-controllable by eliminating
+human intervention.  Anyone familiar with scripting tmux can use this tool.  All
+you have to do is target the recording in the playscript:
+
+	tmux -L recording send-keys 'echo hello world'
 
 =head1 OPTIONS
 
@@ -224,7 +227,8 @@ The uppercase -H is to parallel the lowercase -h.
 
 =head1 COMMANDS
 
-Several quality-of-life functions are exposed to the playscript.
+Several quality-of-life functions are exposed to the playscript.  Only
+C<curtain_up> and C<curtain_down> are mandatory.
 
 =over
 
@@ -286,10 +290,10 @@ The program exits with the following status codes.
 
 =head1 EXAMPLES
 
-Create a file with the following contents.  Call it C<example.script>.
+Create a file with the following contents.  Call it C<example.play>.
 
 	+-----+------------------------------+
-	|     | File: example.script         |
+	|     | File: example.play           |
 	+-----+------------------------------+
 	|  1  | curtain_up                   |
 	|  2  | typewrite 'echo hello world' |
@@ -304,9 +308,9 @@ By itself, this is not very interesting.
 
 This program gives life to your playscript.
 
-	bash playwright.sh example.script example.cast
+	bash playwright.sh example.play example.cast
 
-This will output C<example.cast>.  You can play with this command.
+This will output C<example.cast>.  You can play it with this command.
 
 	asciinema play example.cast
 

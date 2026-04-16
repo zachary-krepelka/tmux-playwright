@@ -8,7 +8,7 @@
 Tmux Playwright is a bash script that records an asciinema cast
 non-interactively in a headless tmux server using an input script to
 programmatically specify behavior.  A design goal is to make the process
-of recording Asciinema casts reproducible and version-controllable by
+of recording asciinema casts reproducible and version-controllable by
 eliminating human intervention.  Anyone familiar with scripting tmux can
 use this tool.
 
