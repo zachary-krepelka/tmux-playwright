@@ -5,7 +5,7 @@
 # DATE: Monday, November 17th, 2025
 # ABOUT: Stage Asciinema Casts Programmatically
 # ORIGIN: https://github.com/zachary-krepelka/tmux-playwright.git
-# UPDATED: Monday, December 1st, 2025 at 10:38 PM
+# UPDATED: Wednesday, April 15th, 2026 at 10:03 PM
 
 # Functions --------------------------------------------------------------- {{{1
 
@@ -22,8 +22,6 @@ usage() {
 	  <recording> is output  (it's an asciinema cast)
 
 	Options:
-	  -c FILE  pre-[c]onfigure tmux environment before recording
-	           FILE is in the tmux configuration language
 	  -C DIR   where the recording takes place (default: \$PWD)
 	  -d NxM   specify terminal [d]imensions (default: 80x24)
 	  -f       [f]orcibly overwrite existing output file
@@ -66,7 +64,15 @@ check_dependencies() {
 	fi
 }
 
-# Exports ----------------------------------------------------------------- {{{1
+curtain_up() {
+	tmux -f /dev/null -L recorder new-session -d "
+		asciinema rec --cols=$cols --rows=$rows --overwrite '$output' -c '
+			tmux -L recording attach'"
+}
+
+curtain_down() {
+	tmux -L recording send-keys C-D
+}
 
 typewrite() {
 
@@ -99,41 +105,23 @@ enter() {
 	tmux -L recording send-keys C-m
 }
 
-curtain-call() {
-	tmux -L recording kill-server
-}
-
-export -f typewrite enter curtain-call
-
 # Command-line Argument Parsing ------------------------------------------- {{{1
 
 check_dependencies # must be called before any external command
 
 cols=80
 rows=24
-config=
 force=false
 where="${PWD}"
 
-while getopts ':hHc:C:d:fs' option
+while getopts ':hHC:d:fs' option
 do
 	case "$option" in
 		h) usage; exit 0;;
 		H) documentation; exit 0;;
-		c)
-			if ! test -f "$OPTARG"
-			then error 6 'configuration file does not exist'
-			fi
-
-			if ! tmux source-file -n "$OPTARG" &> /dev/null
-			then error 7 'configuration file contains errors'
-			fi
-
-			config="$OPTARG"
-		;;
 		C)
 			if ! test -d "$OPTARG"
-			then  error 8 'alternate directory does not exist'
+			then  error 6 'alternate directory does not exist'
 			fi
 
 			where="$(realpath "$OPTARG")"
@@ -144,7 +132,7 @@ do
 				cols=$(cut -dx -f1 <<< $OPTARG)
 				rows=$(cut -dx -f2 <<< $OPTARG)
 			else
-				error 9 'invalid dimension specifier'
+				error 7 'invalid dimension specifier'
 			fi
 		;;
 		f) force=true;;
@@ -181,17 +169,10 @@ fi
 
 # Main Processing --------------------------------------------------------- {{{1
 
-tmux -f /dev/null -L recording new-session -d -c "$where" -x $cols -y $rows
+tmux -f /dev/null -L recording new-session -d -c "$where" -x $cols -y $rows '
+	bash --noprofile --norc --noediting'
 
-if test -n "$config"
-then tmux -L recording source-file "$config"
-fi
-
-tmux -f /dev/null -L recorder new-session -d "
-	asciinema rec --cols=$cols --rows=$rows --overwrite '$output' -c '
-		tmux -L recording attach'"
-
-bash "$input"
+source "$input"
 
 # Documentation ----------------------------------------------------------- {{{1
 
@@ -247,6 +228,19 @@ Several quality-of-life functions are exposed to the playscript.
 
 =over
 
+=item curtain_up
+
+This function starts the recording.  The region of code prior to the call to
+this function runs I<behind the scenes> and may be used to I<set the stage> for
+the recording by pre-configuring the environment.
+
+=item curtain_down
+
+This function ends the recording.  The region of code after the call to this
+function runs I<behind the scenes> and may be used to perform clean up
+operations.  For example, if the recording entailed creating a file, you may
+want to delete it afterwards.
+
 =item typewrite [-d <delay>] <text>
 
 This function types text.  This is roughly equivalent to
@@ -263,12 +257,6 @@ need escaped in some special way.
 This function presses enter.  It is equivalent to
 
 	tmux -L recording send-keys Enter
-
-=item curtain-call
-
-This ends the recording. It is equivalent to
-
-	tmux -L recording kill-server
 
 =back
 
@@ -290,13 +278,9 @@ The program exits with the following status codes.
 
 =item 5 if the output file already exists
 
-=item 6 if the argument to B<-c> is not a file
+=item 6 if the argument to B<-C> is not a directory
 
-=item 7 if the file to B<-c> contains errors, i.e., tmux fails to parse it
-
-=item 8 if the argument to B<-C> is not a directory
-
-=item 9 if -d received invalid terminal dimensions. Aim for a string like 80x24.
+=item 7 if -d received invalid terminal dimensions. Aim for a string like 80x24.
 
 =back
 
@@ -307,10 +291,11 @@ Create a file with the following contents.  Call it C<example.script>.
 	+-----+------------------------------+
 	|     | File: example.script         |
 	+-----+------------------------------+
-	|  1  | typewrite 'echo hello world' |
-	|  2  | enter                        |
-	|  3  | sleep 1                      |
-	|  4  | curtain-call                 |
+	|  1  | curtain_up                   |
+	|  2  | typewrite 'echo hello world' |
+	|  3  | enter                        |
+	|  4  | sleep 1                      |
+	|  5  | curtain_down                 |
 	+-----+------------------------------+
 
 This file specifies a course of actions.  It is like a playscript for a
@@ -319,7 +304,7 @@ By itself, this is not very interesting.
 
 This program gives life to your playscript.
 
-	bash playscript.sh example.script example.cast
+	bash playwright.sh example.script example.cast
 
 This will output C<example.cast>.  You can play with this command.
 
