@@ -5,7 +5,7 @@
 # DATE: Monday, November 17th, 2025
 # ABOUT: Stage Asciinema Casts Programmatically
 # ORIGIN: https://github.com/zachary-krepelka/tmux-playwright.git
-# UPDATED: Thursday, April 16th, 2026 at 12:45 AM
+# UPDATED: Friday, April 17th, 2026 at 2:05 AM
 
 # Functions --------------------------------------------------------------- {{{1
 
@@ -66,7 +66,7 @@ check_dependencies() {
 
 curtain_up() {
 	tmux -f /dev/null -L recorder new-session -d "
-		asciinema rec --cols=$cols --rows=$rows --overwrite '$output' -c '
+		asciinema rec --window-size ${cols}x$rows --overwrite '$output' -c '
 			tmux -L recording attach'"
 }
 
@@ -108,6 +108,8 @@ enter() {
 # Command-line Argument Parsing ------------------------------------------- {{{1
 
 check_dependencies # must be called before any external command
+
+# TODO check versions
 
 cols=80
 rows=24
