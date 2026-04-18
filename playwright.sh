@@ -5,7 +5,7 @@
 # DATE: Monday, November 17th, 2025
 # ABOUT: Stage Asciinema Casts Programmatically
 # ORIGIN: https://github.com/zachary-krepelka/tmux-playwright.git
-# UPDATED: Friday, April 17th, 2026 at 11:58 PM
+# UPDATED: Saturday, April 18th, 2026 at 2:32 PM
 
 # Variables --------------------------------------------------------------- {{{1
 
@@ -112,10 +112,29 @@ enter() {
 }
 
 cmd() {
-	typewrite "$1"
-	sleep ${delays[hold]}
-	enter
-	sleep ${delays[cmd]}
+	local OPTIND opt_quick=false
+
+	while getopts q option
+	do
+		case "$option" in
+			q) opt_quick=true;;
+		esac
+	done
+
+	shift $((OPTIND - 1))
+
+	local text="$1"
+
+	if $opt_quick
+	then
+		tmux -L recording send-keys -l "$text"
+		enter
+	else
+		typewrite "$text"
+		sleep ${delays[hold]}
+		enter
+		sleep ${delays[cmd]}
+	fi
 }
 
 pace() {
@@ -285,7 +304,7 @@ This function presses enter.  It is equivalent to
 
 	tmux -L recording send-keys Enter
 
-=item cmd <text>
+=item cmd [-q] <text>
 
 This function executes <text> as a command by sending it to the shell as if it
 were typed out by a human.  This is roughly equivalent to calling C<typewrite>
@@ -295,6 +314,10 @@ pressing enter, since a human would normally hesitate before entering a
 dangerous command and give it a second look.  A short pause is also interjected
 after pressing enter to give time between this command and the next one if
 called in succession.
+
+The option `-q` can be supplied to skip presentation logic and execute the
+command directly. It stands for [q]uick.  This is useful for issuing commands
+before the recording starts to pre-configure the environment.
 
 =item pace <factor>
 
