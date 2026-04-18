@@ -1,6 +1,4 @@
 curtain_up
-typewrite 'echo hello world'
-enter
-sleep 1
+cmd 'echo hello world'
 curtain_down
 # vim: filetype=bash

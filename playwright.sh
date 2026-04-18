@@ -5,11 +5,15 @@
 # DATE: Monday, November 17th, 2025
 # ABOUT: Stage Asciinema Casts Programmatically
 # ORIGIN: https://github.com/zachary-krepelka/tmux-playwright.git
-# UPDATED: Friday, April 17th, 2026 at 2:05 AM
+# UPDATED: Friday, April 17th, 2026 at 11:58 PM
 
-# Functions --------------------------------------------------------------- {{{1
+# Variables --------------------------------------------------------------- {{{1
 
 program="${0##*/}"
+
+declare -A delays=([start]=0.25 [key]=0.05 [hold]=0.3 [cmd]=0.5)
+
+# Functions --------------------------------------------------------------- {{{1
 
 usage() {
 	cat <<-USAGE
@@ -49,7 +53,8 @@ error() {
 check_dependencies() {
 
 	local missing= dependencies=(
-		asciinema cat column cut less pod2text realpath sed sleep tmux
+		asciinema cat column cut dc less
+		pod2text realpath sed sleep tmux
 	)
 
 	for cmd in "${dependencies[@]}"
@@ -68,6 +73,7 @@ curtain_up() {
 	tmux -f /dev/null -L recorder new-session -d "
 		asciinema rec --window-size ${cols}x$rows --overwrite '$output' -c '
 			tmux -L recording attach'"
+	sleep ${delays[start]}
 }
 
 curtain_down() {
@@ -76,7 +82,7 @@ curtain_down() {
 
 typewrite() {
 
-	local OPTIND delay=0.05
+	local OPTIND delay=${delays[key]}
 
 	while getopts d: option
 	do
@@ -103,6 +109,20 @@ typewrite() {
 
 enter() {
 	tmux -L recording send-keys C-m
+}
+
+cmd() {
+	typewrite "$1"
+	sleep ${delays[hold]}
+	enter
+	sleep ${delays[cmd]}
+}
+
+pace() {
+	local factor="$1"
+	for event in "${!delays[@]}"
+	do delays[$event]=$(dc -e "${delays[$event]} $factor * p q")
+	done
 }
 
 # Command-line Argument Parsing ------------------------------------------- {{{1
@@ -256,15 +276,67 @@ This function types text.  This is roughly equivalent to
 	tmux -L recording send-keys -l <text>
 
 except that there is a <delay> between sending each character to simulate a user
-typing. The default delay is 0.05 seconds.  This function has not been
-thoroughly tested, so you may run into problems with certain characters that
-need escaped in some special way.
+typing. This function has not been thoroughly tested, so you may run into
+problems with certain characters that need escaped in some special way.
 
 =item enter
 
 This function presses enter.  It is equivalent to
 
 	tmux -L recording send-keys Enter
+
+=item cmd <text>
+
+This function executes <text> as a command by sending it to the shell as if it
+were typed out by a human.  This is roughly equivalent to calling C<typewrite>
+and C<enter> in succession, except that pauses are interjected to give the
+viewer time to process the command.  Namely, a short pause is interjected before
+pressing enter, since a human would normally hesitate before entering a
+dangerous command and give it a second look.  A short pause is also interjected
+after pressing enter to give time between this command and the next one if
+called in succession.
+
+=item pace <factor>
+
+This function scales the default delay values uniformly.  See below.  Remember
+that pace is the mathematical inverse of speed, so a higher <factor> results in
+a slower speed, and a lower <factor> results in a higher speed.
+
+=back
+
+=head1 VARIABLES
+
+Several variables are exposed to the playscript.  These are default values used
+in the functions outlined above, and they may be overridden by the user to
+control the behavior of the functions.  For consistency throughout the
+recording, this is preferably done prior to C<curtain_up>.
+
+=over
+
+=item ${delay[start]} (default: 0.25 seconds)
+
+Used by the C<curtain_up> function.  If a command were executed immediately
+after C<curtain_up> with no delay, then the text would be partially typed out
+before asciinema finishes initializing.  If the resulting cast is later
+converted to a gif, the thumbnail of the gif would include a partially typed
+command, which is undesirable.  The delay prevents this.
+
+=item ${delay[key]} (default: 0.05 seconds)
+
+Used by the C<typewrite> and C<cmd> functions.  This is the default delay
+between characters as they are typed.
+
+=item ${delay[hold]} (default: 0.3 seconds)
+
+Used by the C<cmd> function.  This is the delay before pressing enter at the end
+of a command after it has been typed.  It is the hesitation that a user would
+take to review the command before executing it.
+
+=item ${delay[cmd]} (default: 0.5 seconds
+
+Used by the C<cmd> function. This is the delay after pressing enter on a
+command.  As commands are usually executed in sequence, it provides a buffer for
+the next command.
 
 =back
 
@@ -296,15 +368,13 @@ The program exits with the following status codes.
 
 Create a file with the following contents.  Call it C<example.play>.
 
-	+-----+------------------------------+
-	|     | File: example.play           |
-	+-----+------------------------------+
-	|  1  | curtain_up                   |
-	|  2  | typewrite 'echo hello world' |
-	|  3  | enter                        |
-	|  4  | sleep 1                      |
-	|  5  | curtain_down                 |
-	+-----+------------------------------+
+	+-----+------------------------+
+	|     | File: example.play     |
+	+-----+------------------------+
+	|  1  | curtain_up             |
+	|  2  | cmd 'echo hello world' |
+	|  3  | curtain_down           |
+	+-----+------------------------+
 
 This file specifies a course of actions.  It is like a playscript for a
 theatrical performance because it instructs a future actor on how to perform.
