@@ -5,7 +5,7 @@
 # DATE: Monday, November 17th, 2025
 # ABOUT: Stage Asciinema Casts Programmatically
 # ORIGIN: https://github.com/zachary-krepelka/tmux-playwright.git
-# UPDATED: Saturday, April 18th, 2026 at 2:32 PM
+# UPDATED: Saturday, April 18th, 2026 at 4:07 PM
 
 # Variables --------------------------------------------------------------- {{{1
 
@@ -135,6 +135,11 @@ cmd() {
 		enter
 		sleep ${delays[cmd]}
 	fi
+}
+
+prompt() {
+	local string="$1"
+	cmd -q "export PS1='$string'; clear"
 }
 
 pace() {
@@ -318,6 +323,11 @@ called in succession.
 The option `-q` can be supplied to skip presentation logic and execute the
 command directly. It stands for [q]uick.  This is useful for issuing commands
 before the recording starts to pre-configure the environment.
+
+=item prompt <string>
+
+This function sets the shell prompt to <string> and clears the screen.  It is
+intended to be used before the recording starts.
 
 =item pace <factor>
 
