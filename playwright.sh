@@ -393,3 +393,5 @@ This will output C<example.cast>.  You can play it with this command.
 Zachary Krepelka L<https://github.com/zachary-krepelka>
 
 =cut
+
+# vim: tw=80 ts=8 sw=8 noet fdm=marker
