@@ -5,7 +5,7 @@
 # DATE: Monday, November 17th, 2025
 # ABOUT: Stage Asciinema Casts Programmatically
 # ORIGIN: https://github.com/zachary-krepelka/tmux-playwright.git
-# UPDATED: Saturday, April 18th, 2026 at 4:07 PM
+# UPDATED: Sunday, April 19th, 2026 at 12:26 PM
 
 # Variables --------------------------------------------------------------- {{{1
 
@@ -140,6 +140,11 @@ cmd() {
 prompt() {
 	local string="$1"
 	cmd -q "export PS1='$string'; clear"
+}
+
+status() {
+	local text="$1"
+	tmux -L recording set-option status-format[0] "$text"
 }
 
 pace() {
@@ -328,6 +333,22 @@ before the recording starts to pre-configure the environment.
 
 This function sets the shell prompt to <string> and clears the screen.  It is
 intended to be used before the recording starts.
+
+=item status <text>
+
+This function sets the tmux status line to contain <text>.  This function can be
+interjected intermittently throughout the playscript to provide commentary,
+wherein the text in the status line can act as subtitles for the recording.  So
+this special intent of the status line is not mistaken for its normal use case,
+it may help to re-style the status line from its standard green color before the
+recording starts.  For example, place this command before C<curtain_up>.
+
+	tmux -L recording set-option -g status-style fg=black,bg=white
+
+Another conceivable use case is to add a watermark to your recording, wherein
+the function is called once before C<curtain_up>.
+
+	status "This is a demonstration of $project by $author."
 
 =item pace <factor>
 
